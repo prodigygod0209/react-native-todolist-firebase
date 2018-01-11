@@ -56,7 +56,7 @@ var styles = StyleSheet.create({
         textAlign: 'center',
     },
     action: {
-        backgroundColor: constants.actionColor,
+        backgroundColor: '#1FBBD2',
         borderColor: 'transparent',
         borderWidth: 1,
         paddingLeft: 16,

@@ -4,6 +4,7 @@ import * as firebase from 'firebase';
 import { 
   AppRegistry, 
   ListView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,6 +15,7 @@ import {
   
 } from 'react-native';
 import ActionButton from './component/ActionButton';
+import Items from './component/items';
 import style from './styles.js';
 
 const Container = styled.View`
@@ -37,9 +39,10 @@ const Header = styled.View`
 `
 const HeaderTitle = styled.Text`
   font-size: 22px;
+  color: #fff;
 `
-const ItemList = styled.View`
-  flex: 1;
+const ItemList = styled.ScrollView`
+   flex: 1;
 `
 const Input = styled.TextInput`
   width: 100%;
@@ -66,38 +69,76 @@ export default class App extends React.Component{
     super(props)
     this.state = {
       text: "",
-      list: []
+      currentlyOpenSwipeable: null,
+      list: [],
+      list2: [{test:2},{test:3}]
     }
     this.addList = this.addList.bind(this);
+    this.handleScroll = this.handleScroll.bind(this);
+  }
+
+  componentWillMount() {
+    
+    console.log(this.state.list2)
+    const preContent = []
+    database.on('child_added', snap => {
+      preContent.push({
+        "id": snap.key,
+        "value": snap.val().content
+      })
+    })
+    
+    console.log(preContent)
+    this.setState({
+      list2: preContent,
+    })
+    // this.setState({
+    //   list: this.state.list
+    // })
   }
 
   addList(content) {
-   database.push().set({ content: content })
+  //  database.push().set({ content: content })
    this.setState({
      text: "",
+     
    })
   }
 
-  componentDidMount() {
-    let content = [];
-    database.on('child_added',snap => {
-      content.push({
-        id: snap.key,
-        value: snap.val()
-      })
-    })
-  }
-  
+  handleScroll = () => {
+    const { currentlyOpenSwipeable } = this.state;
+
+    if (currentlyOpenSwipeable) {
+      currentlyOpenSwipeable.recenter();
+    }
+  };
 
   render(){
+    const { currentlyOpenSwipeable } = this.state;
+    const itemProps = {
+      onOpen: (event, gestureState, swipeable) => {
+        if (currentlyOpenSwipeable && currentlyOpenSwipeable !== swipeable) {
+          currentlyOpenSwipeable.recenter();
+        }
+
+        this.setState({ currentlyOpenSwipeable: swipeable });
+      },
+      onClose: () => this.setState({ currentlyOpenSwipeable: null })
+    };
+    let list = this.state.list2.map(function(lists) {
+      return <Items />
+    })
     return(
       <Container>
         <Top></Top>
         <Header>
           <HeaderTitle>To DO</HeaderTitle>
         </Header>
-        <ItemList />
-
+        <ItemList scrollEventThrottle={16} onScroll={this.handleScroll}>
+          {
+            list
+          }
+        </ItemList>
         <Input 
           placeholder=" type item..."
           onChangeText = { (text) => this.setState({text})}

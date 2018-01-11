@@ -2,7 +2,7 @@
 
 ![](http://g.recordit.co/gy2cLwSmsl.gif)
 
-##React-Native + FireBase
+## React-Native + FireBase
 最簡單的React-native TODOLIST實作
 可以學到一些基本React-native的component與function間應用
 

@@ -23,6 +23,8 @@ const Container = styled.View`
   flex-direction: column;
   width: 100%;
   height: 100%;
+  justify-content: center;
+  align-items: center;
 `;
 
 const Top = styled.View`
@@ -42,6 +44,7 @@ const HeaderTitle = styled.Text`
   color: #fff;
 `
 const ItemList = styled.ScrollView`
+   width: 80%;
    flex: 1;
 `
 const Input = styled.TextInput`
@@ -50,8 +53,6 @@ const Input = styled.TextInput`
   font-size: 24px;
   background-color: #f7f7f7;  
 `
-
-
 var config = {
   apiKey: "AIzaSyBtcv1KzNKusLXMPyouxk7t6uhKjPt_EDg",
   authDomain: "react-native-10e5b.firebaseapp.com",
@@ -70,41 +71,52 @@ export default class App extends React.Component{
     this.state = {
       text: "",
       currentlyOpenSwipeable: null,
-      list: [],
-      list2: [{test:2},{test:3}]
+      dataSource: new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2,
+      })
     }
-    this.addList = this.addList.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
   }
 
-  componentWillMount() {
-    
-    console.log(this.state.list2)
-    const preContent = []
-    database.on('child_added', snap => {
-      preContent.push({
-        "id": snap.key,
-        "value": snap.val().content
+  componentDidMount() {
+    database.on('value' ,snap => {
+      let items = [];
+      snap.forEach((child) => {
+        items.push({
+          key: child.key,
+          content: child.val().content
+        })
+      })
+
+      this.setState({
+        dataSource: this.state.dataSource.cloneWithRows(items)
+      },function(){
+        console.log(this.state.dataSource)
       })
     })
-    
-    console.log(preContent)
-    this.setState({
-      list2: preContent,
-    })
-    // this.setState({
-    //   list: this.state.list
-    // })
   }
 
-  addList(content) {
-  //  database.push().set({ content: content })
-   this.setState({
-     text: "",
-     
-   })
+  _addItem() {
+    AlertIOS.prompt(
+      'Add New Item',
+      null, [{
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel'
+        },
+        {
+          text: 'Add',
+          onPress: (text) => {
+            if(text == '') return
+            database.push().set({
+              content: text
+            })
+          }
+        },
+      ],
+      'plain-text'
+    );
   }
-
   handleScroll = () => {
     const { currentlyOpenSwipeable } = this.state;
 
@@ -125,9 +137,7 @@ export default class App extends React.Component{
       },
       onClose: () => this.setState({ currentlyOpenSwipeable: null })
     };
-    let list = this.state.list2.map(function(lists) {
-      return <Items />
-    })
+
     return(
       <Container>
         <Top></Top>
@@ -135,21 +145,19 @@ export default class App extends React.Component{
           <HeaderTitle>To DO</HeaderTitle>
         </Header>
         <ItemList scrollEventThrottle={16} onScroll={this.handleScroll}>
-          {
-            list
-          }
+          <ListView
+            dataSource={this.state.dataSource}
+            renderRow={(rowData) => <Items content={rowData.content} id={rowData.key} delete={(text) => { database.child(rowData.key).remove() } } />}
+            enableEmptySections={true}
+          />
         </ItemList>
-        <Input 
-          placeholder=" type item..."
-          onChangeText = { (text) => this.setState({text})}
-          ref={input => { this.textInput = input }} 
-          value={this.state.text}
-        />
         <ActionButton 
-          title="submit"
-          onPress={() => this.addList(this.state.text)}
+          title="Add"
+          onPress={this._addItem.bind(this)}
         />
       </Container>
     )
   }
+ 
+  
 }

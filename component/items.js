@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components/native';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Swipeable from 'react-native-swipeable';
+
 const Item = styled.View`
    margin-top: 20px;
    width: 100%;
@@ -17,7 +18,7 @@ const Item = styled.View`
 `
 const ItemName = styled.Text`
    font-size: 24px;
-   color: #000;
+   color: #fff;
 `
 const Delete = styled.TouchableOpacity`
    margin-top: 20px;
@@ -36,7 +37,7 @@ export default class Items extends React.Component{
         return (
             <Swipeable
                 rightButtons={[
-                    <Delete>
+                    <Delete onPress = {this.props.delete}>
                         <Text>Delete</Text>
                     </Delete>
                 ]}
@@ -44,7 +45,7 @@ export default class Items extends React.Component{
                 onRightButtonsCloseRelease={this.props.onClose}
                 >
                 <Item>
-                    <ItemName>Reading</ItemName>
+                    <ItemName>{this.props.content}</ItemName>
                 </Item>
             </Swipeable>
         );
